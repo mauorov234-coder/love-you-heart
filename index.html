@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#030203">
+  <meta name="description" content="A little love, gathered one word at a time.">
+  <title>Love, in every word</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #fdf5f7;
+      --rose: #f5a1bc;
+      --pink: #ff789e;
+      --red: #f45e78;
+      --serif: "Bodoni MT", "Didot", "Times New Roman", serif;
+      --ease-gather: cubic-bezier(.16, .82, .19, 1);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { width: 100%; min-width: 320px; min-height: 100%; margin: 0; }
+
+    body {
+      min-height: 100svh;
+      overflow: hidden;
+      color: var(--ink);
+      background: #030203;
+      font-family: var(--serif);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .scene {
+      position: relative;
+      display: grid;
+      min-height: 100svh;
+      overflow: hidden;
+      isolation: isolate;
+      place-items: center;
+      background:
+        radial-gradient(ellipse 38% 34% at 50% 46%, rgb(109 24 49 / 13%), transparent 75%),
+        #030203;
+    }
+
+    .scene::after {
+      position: absolute;
+      z-index: -1;
+      inset: 0;
+      pointer-events: none;
+      content: "";
+      opacity: .15;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.88' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' opacity='.16' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    .composition {
+      position: relative;
+      display: grid;
+      width: min(100vw, 900px);
+      min-height: 100svh;
+      padding: 32px 20px 42px;
+      justify-items: center;
+      align-content: center;
+    }
+
+    .eyebrow {
+      position: absolute;
+      top: clamp(28px, 7vh, 64px);
+      left: 50%;
+      margin: 0;
+      color: rgb(248 220 229 / 55%);
+      font-family: "Palatino Linotype", Palatino, var(--serif);
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: .32em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      transform: translateX(-50%);
+      animation: arrive 1.5s both;
+    }
+
+    .heart-stage {
+      position: relative;
+      width: min(82vw, 620px);
+      height: min(72svh, 535px);
+      min-height: 275px;
+      animation: breathe 7.6s ease-in-out 3.4s infinite;
+      will-change: transform;
+    }
+
+    .heart-stage::before {
+      position: absolute;
+      inset: 23% 17%;
+      border-radius: 50%;
+      background: rgb(191 48 86 / 9%);
+      filter: blur(54px);
+      opacity: 0;
+      transition: opacity 3s ease;
+      content: "";
+    }
+
+    .heart-stage.is-formed::before { opacity: 1; }
+
+    .word {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      color: var(--word-color, var(--ink));
+      font-family: "Palatino Linotype", Palatino, Georgia, var(--serif);
+      font-size: clamp(10px, 1vw, 13px);
+      font-weight: 500;
+      line-height: 1;
+      white-space: nowrap;
+      opacity: 0;
+      text-shadow: 0 0 5px rgb(250 139 173 / 27%);
+      transform: translate(calc(-50% + var(--from-x)), calc(-50% + var(--from-y))) rotate(var(--angle));
+      transition:
+        transform var(--move-time, 1900ms) var(--ease-gather) var(--delay, 0ms),
+        opacity 1150ms ease var(--delay, 0ms),
+        color 800ms ease,
+        text-shadow 800ms ease;
+      will-change: transform, opacity;
+      user-select: none;
+    }
+
+    .heart-stage.is-forming .word,
+    .heart-stage.is-formed .word {
+      opacity: var(--word-opacity, .88);
+      transform: translate(calc(-50% + var(--target-x)), calc(-50% + var(--target-y))) rotate(var(--angle));
+    }
+
+    .heart-stage.is-scattering .word {
+      opacity: 0;
+      transform: translate(calc(-50% + var(--from-x)), calc(-50% + var(--from-y))) rotate(var(--angle));
+    }
+
+    .heart-stage.is-revealing .word {
+      opacity: var(--word-opacity, .88);
+      transform: translate(calc(-50% + var(--from-x)), calc(-50% + var(--from-y))) rotate(var(--angle));
+    }
+
+    .word.is-glint {
+      color: #fff8fb;
+      text-shadow: 0 0 7px #ffc0d2, 0 0 20px rgb(255 116 158 / 78%);
+    }
+
+    .word:hover {
+      z-index: 2;
+      color: #fff;
+      text-shadow: 0 0 9px #ffc0d2, 0 0 22px rgb(255 116 158 / 90%);
+      transition-delay: 0ms;
+      cursor: default;
+    }
+
+    .dust {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .spark {
+      position: absolute;
+      width: var(--size);
+      height: var(--size);
+      border-radius: 50%;
+      background: var(--spark-color);
+      box-shadow: 0 0 8px 1px var(--spark-color);
+      animation: wander var(--duration) ease-in-out var(--spark-delay) infinite alternate;
+      opacity: var(--opacity);
+      will-change: transform, opacity;
+    }
+
+    .controls {
+      position: absolute;
+      bottom: clamp(34px, 8vh, 70px);
+      left: 50%;
+      display: grid;
+      justify-items: center;
+      gap: 13px;
+      transform: translateX(-50%);
+      animation: arrive 1.6s 350ms both;
+    }
+
+    .create-button {
+      display: inline-flex;
+      min-height: 46px;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 0 21px;
+      border: 1px solid rgb(255 200 216 / 25%);
+      border-radius: 999px;
+      color: #f9e9ee;
+      background: rgb(255 230 238 / 4%);
+      font-family: "Palatino Linotype", Palatino, var(--serif);
+      font-size: 13px;
+      letter-spacing: .035em;
+      cursor: pointer;
+      transition: background 300ms ease, border-color 300ms ease, transform 300ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .create-button:hover {
+      border-color: rgb(255 200 216 / 55%);
+      background: rgb(255 230 238 / 9%);
+      transform: translateY(-2px);
+    }
+
+    .create-button:active { transform: translateY(0) scale(.98); }
+    .create-button:focus-visible { outline: 2px solid var(--rose); outline-offset: 4px; }
+
+    .button-heart {
+      color: #f28ba6;
+      font-size: 14px;
+      transition: transform 400ms var(--ease-gather);
+    }
+
+    .create-button:hover .button-heart { transform: scale(1.17); }
+
+    .signature {
+      margin: 0;
+      color: rgb(244 220 228 / 35%);
+      font-family: "Palatino Linotype", Palatino, var(--serif);
+      font-size: 10px;
+      letter-spacing: .12em;
+    }
+
+    @keyframes arrive {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.025); }
+    }
+
+    @keyframes wander {
+      from { transform: translate3d(0, 0, 0); opacity: var(--opacity); }
+      to { transform: translate3d(var(--drift-x), var(--drift-y), 0); opacity: calc(var(--opacity) * .36); }
+    }
+
+    @media (max-width: 600px) {
+      .composition { padding-inline: 12px; }
+      .heart-stage { width: min(84vw, 460px); height: min(58svh, 440px); min-height: 270px; }
+      .word { font-size: 10px; }
+      .scene { background: radial-gradient(ellipse 58% 30% at 50% 46%, rgb(109 24 49 / 12%), transparent 76%), #030203; }
+    }
+
+    @media (max-height: 600px) and (min-width: 601px) {
+      .composition { padding-block: 14px; }
+      .heart-stage { height: 68svh; min-height: 220px; }
+      .eyebrow { top: 20px; }
+      .controls { bottom: 17px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="scene">
+    <div class="dust" aria-hidden="true"></div>
+    <section class="composition" aria-label="A heart made from words">
+      <p class="eyebrow">A little note for you</p>
+      <div class="heart-stage" aria-hidden="true"></div>
+      <div class="controls">
+        <button class="create-button" type="button">
+          <span>Create Love</span>
+          <span class="button-heart" aria-hidden="true">&#9829;</span>
+        </button>
+        <p class="signature">made with love, just for you</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const stage = document.querySelector('.heart-stage');
+      const dust = document.querySelector('.dust');
+      const button = document.querySelector('.create-button');
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const palette = ['#fff7fa', '#f9cfda', '#f5a1bc', '#ffdce5', '#f4bacb'];
+      let words = [];
+      let isAnimating = false;
+      let hasStarted = false;
+      let glintTimer;
+      let resizeTimer;
+
+      function heartContains(x, y) {
+        const curve = x * x + y * y - 1;
+        return curve * curve * curve - x * x * y * y * y <= 0;
+      }
+
+      function scatterPoint() {
+        const spread = Math.max(window.innerWidth, window.innerHeight) * .68;
+        const angle = Math.random() * Math.PI * 2;
+        const distance = spread * (.35 + Math.random() * .9);
+        return { x: Math.cos(angle) * distance, y: Math.sin(angle) * distance };
+      }
+
+      function createRandomOrder(length) {
+        const order = Array.from({ length }, (_, index) => index);
+        for (let position = order.length - 1; position > 0; position -= 1) {
+          const swapPosition = Math.floor(Math.random() * (position + 1));
+          [order[position], order[swapPosition]] = [order[swapPosition], order[position]];
+        }
+        return order;
+      }
+
+      function buildHeart(shouldForm = true) {
+        const bounds = stage.getBoundingClientRect();
+        const horizontalRadius = bounds.width * .425;
+        const verticalRadius = bounds.height * .435;
+        const stepX = window.innerWidth < 600 ? 48 : 64;
+        const stepY = window.innerWidth < 600 ? 23 : 29;
+        const points = [];
+        const pairColors = [];
+        const pairVariations = [];
+        const pairAngles = [];
+        let rowIndex = 0;
+
+        for (let pixelY = -verticalRadius * 1.4; pixelY <= verticalRadius * 1.15; pixelY += stepY, rowIndex += 1) {
+          const rowOffset = rowIndex % 2 ? stepX / 2 : 0;
+          for (let pixelX = stepX / 2 + rowOffset; pixelX <= horizontalRadius * 1.12; pixelX += stepX) {
+            const normalizedX = pixelX / horizontalRadius;
+            const normalizedY = -pixelY / verticalRadius;
+            if (heartContains(normalizedX, normalizedY)) {
+              const pairIndex = pairColors.length;
+              pairColors.push(palette[Math.floor(Math.random() * palette.length)]);
+              pairVariations.push({ x: (Math.random() - .5) * 1, y: (Math.random() - .5) * 1 });
+              pairAngles.push((Math.random() - .5) * 8);
+              points.push({ x: pixelX, y: pixelY, side: -1, pairIndex });
+              points.push({ x: pixelX, y: pixelY, side: 1, pairIndex });
+            }
+          }
+        }
+
+        stage.replaceChildren();
+        const arrivalOrder = createRandomOrder(points.length);
+        words = points.map((point, index) => {
+          const word = document.createElement('span');
+          const start = scatterPoint();
+          const variation = pairVariations[point.pairIndex];
+          const angle = point.side * pairAngles[point.pairIndex];
+          const delay = prefersReducedMotion.matches ? 0 : Math.round(arrivalOrder[index] / points.length * 2100);
+          const targetX = point.side * (point.x + variation.x);
+          const targetY = point.y + variation.y;
+          word.className = 'word';
+          word.textContent = 'Love you';
+          word.dataset.targetX = `${targetX}`;
+          word.dataset.targetY = `${targetY}`;
+          word.style.setProperty('--target-x', `${targetX}px`);
+          word.style.setProperty('--target-y', `${targetY}px`);
+          word.style.setProperty('--from-x', `${start.x}px`);
+          word.style.setProperty('--from-y', `${start.y}px`);
+          word.style.setProperty('--angle', `${angle}deg`);
+          word.style.setProperty('--delay', `${delay}ms`);
+          word.style.setProperty('--word-color', pairColors[point.pairIndex]);
+          word.style.setProperty('--word-opacity', `${.82 + Math.random() * .18}`);
+          word.style.setProperty('--move-time', `${1500 + Math.random() * 800}ms`);
+          stage.append(word);
+          return word;
+        });
+
+        if (shouldForm) {
+          stage.classList.remove('is-formed', 'is-revealing', 'is-scattering');
+          stage.classList.add('is-forming');
+          requestAnimationFrame(() => requestAnimationFrame(() => stage.classList.add('is-formed')));
+          window.setTimeout(() => stage.classList.add('is-formed'), 1800);
+        }
+        scheduleGlints();
+      }
+
+      function scheduleGlints() {
+        if (prefersReducedMotion.matches) return;
+        window.clearTimeout(glintTimer);
+        glintTimer = window.setTimeout(() => {
+          if (!isAnimating && words.length) {
+            const count = 2 + Math.floor(Math.random() * 4);
+            for (let index = 0; index < count; index += 1) {
+              const word = words[Math.floor(Math.random() * words.length)];
+              word.classList.add('is-glint');
+              window.setTimeout(() => word.classList.remove('is-glint'), 800 + Math.random() * 1100);
+            }
+          }
+          scheduleGlints();
+        }, 1400 + Math.random() * 2000);
+      }
+
+      function createDust() {
+        const fragment = document.createDocumentFragment();
+        const colors = ['#ffd0df', '#f582a2', '#fff1f5'];
+        for (let index = 0; index < 28; index += 1) {
+          const spark = document.createElement('i');
+          spark.className = 'spark';
+          spark.style.left = `${Math.random() * 100}%`;
+          spark.style.top = `${Math.random() * 100}%`;
+          spark.style.setProperty('--size', `${1 + Math.random() * 2}px`);
+          spark.style.setProperty('--opacity', `${.14 + Math.random() * .34}`);
+          spark.style.setProperty('--spark-color', colors[Math.floor(Math.random() * colors.length)]);
+          spark.style.setProperty('--duration', `${8 + Math.random() * 12}s`);
+          spark.style.setProperty('--spark-delay', `${-Math.random() * 12}s`);
+          spark.style.setProperty('--drift-x', `${(Math.random() - .5) * 34}px`);
+          spark.style.setProperty('--drift-y', `${(Math.random() - .5) * 30}px`);
+          fragment.append(spark);
+        }
+        dust.append(fragment);
+      }
+
+      function reformHeart() {
+        if (isAnimating) return;
+        isAnimating = true;
+        button.disabled = true;
+        stage.classList.remove('is-formed');
+        const motionDuration = prefersReducedMotion.matches ? 0 : 1;
+
+        for (const word of words) {
+          const point = scatterPoint();
+          word.style.setProperty('--from-x', `${point.x}px`);
+          word.style.setProperty('--from-y', `${point.y}px`);
+          word.style.setProperty('--delay', `${motionDuration ? Math.random() * 100 : 0}ms`);
+          word.classList.remove('is-glint');
+        }
+
+        stage.classList.add('is-scattering');
+        requestAnimationFrame(() => {
+          for (const word of words) {
+            const targetX = Number.parseFloat(word.dataset.targetX) || 0;
+            const targetY = Number.parseFloat(word.dataset.targetY) || 0;
+            word.style.setProperty('--target-x', `${targetX + (Math.random() - .5) * 2}px`);
+            word.style.setProperty('--target-y', `${targetY + (Math.random() - .5) * 2}px`);
+          }
+        });
+
+        window.setTimeout(() => {
+          stage.classList.remove('is-scattering');
+          stage.classList.add('is-revealing');
+          const revealOrder = createRandomOrder(words.length);
+          for (const [index, word] of words.entries()) {
+            word.style.setProperty('--delay', `${motionDuration ? revealOrder[index] / words.length * 950 : 0}ms`);
+          }
+
+          window.setTimeout(() => {
+            stage.classList.remove('is-revealing');
+            const gatherOrder = createRandomOrder(words.length);
+            for (const [index, word] of words.entries()) {
+              const targetX = Number.parseFloat(word.dataset.targetX) || 0;
+              const targetY = Number.parseFloat(word.dataset.targetY) || 0;
+              word.style.setProperty('--target-x', `${targetX + (Math.random() - .5) * 2}px`);
+              word.style.setProperty('--target-y', `${targetY + (Math.random() - .5) * 2}px`);
+              word.style.setProperty('--delay', `${motionDuration ? gatherOrder[index] / words.length * 2100 : 0}ms`);
+            }
+            stage.classList.add('is-formed');
+
+            window.setTimeout(() => {
+              isAnimating = false;
+              button.disabled = false;
+              scheduleGlints();
+            }, motionDuration ? 4500 : 80);
+          }, motionDuration ? 1600 : 0);
+        }, motionDuration ? 2500 : 0);
+      }
+
+      function startLove() {
+        if (isAnimating) return;
+        if (hasStarted) {
+          reformHeart();
+          return;
+        }
+
+        hasStarted = true;
+        isAnimating = true;
+        button.disabled = true;
+        buildHeart(false);
+        const motionDuration = prefersReducedMotion.matches ? 0 : 1;
+        const revealOrder = createRandomOrder(words.length);
+        for (const [index, word] of words.entries()) {
+          word.style.setProperty('--delay', `${motionDuration ? revealOrder[index] / words.length * 950 : 0}ms`);
+        }
+        stage.classList.add('is-revealing');
+
+        window.setTimeout(() => {
+          stage.classList.remove('is-revealing');
+          const gatherOrder = createRandomOrder(words.length);
+          for (const [index, word] of words.entries()) {
+            const targetX = Number.parseFloat(word.dataset.targetX) || 0;
+            const targetY = Number.parseFloat(word.dataset.targetY) || 0;
+            word.style.setProperty('--delay', `${motionDuration ? gatherOrder[index] / words.length * 2100 : 0}ms`);
+            word.style.setProperty('--target-x', `${targetX}px`);
+            word.style.setProperty('--target-y', `${targetY}px`);
+          }
+          stage.classList.add('is-forming');
+          requestAnimationFrame(() => requestAnimationFrame(() => stage.classList.add('is-formed')));
+
+          window.setTimeout(() => {
+            isAnimating = false;
+            button.disabled = false;
+            scheduleGlints();
+          }, motionDuration ? 4500 : 80);
+        }, motionDuration ? 1600 : 0);
+      }
+
+      button.addEventListener('click', startLove);
+      window.addEventListener('resize', () => {
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(() => {
+          if (hasStarted && !isAnimating) buildHeart();
+        }, 180);
+      });
+
+      createDust();
+    })();
+  </script>
+</body>
+</html>
